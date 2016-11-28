@@ -1,0 +1,229 @@
+package msikeyboard
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/boombuler/hid"
+)
+
+// Device is a main struct
+type Device struct {
+	d            hid.Device
+	CurrentTheme Theme
+	Intensity    string
+	Mode         string
+}
+
+// Codes type for match number by name
+type Codes map[string]int
+
+const (
+	// VID is a Vendor ID for MSI keyboard
+	//VID = 6000
+	VID = 0x046d
+	// PID is a Product ID for MSI keyboards
+	//PID = 65280
+	PID = 0xc31c
+)
+
+var (
+	Regions Codes
+	Colors  Codes
+	Levels  Codes
+	Modes   Codes
+)
+
+func init() {
+	Regions = make(Codes)
+	Regions["left"] = 1
+	Regions["middle"] = 2
+	Regions["right"] = 3
+
+	Colors = make(Codes)
+	Colors["black"] = 0
+	Colors["red"] = 1
+	Colors["orange"] = 2
+	Colors["yellow"] = 3
+	Colors["green"] = 4
+	Colors["cyan"] = 5
+	Colors["blue"] = 6
+	Colors["purple"] = 7
+	Colors["white"] = 8
+
+	Levels = make(Codes)
+	Levels["light"] = 3
+	Levels["low"] = 2
+	Levels["med"] = 1
+	Levels["high"] = 0
+
+	Modes = make(Codes)
+	Modes["normal"] = 1
+	Modes["gaming"] = 2
+	Modes["breathe"] = 3
+	Modes["demo"] = 4
+	Modes["wave"] = 5
+}
+
+func getCodesKeys(data Codes) (result []string) {
+	for k := range data {
+		result = append(result, k)
+	}
+	return result
+}
+
+func GetAllColors() []string {
+	return getCodesKeys(Colors)
+}
+
+func GetAllModes() []string {
+	return getCodesKeys(Modes)
+}
+
+// GetDevice function getting keyboard device pointer
+func GetDevice() (device *Device, err error) {
+	d := new(Device)
+	deviceInfo := hid.FindDevices(VID, PID)
+
+	di := <-deviceInfo
+	d.d, err = di.Open()
+	if err != nil {
+		return
+	}
+	log.Printf("Path: %s", di.Path)
+	log.Printf("Vendor ID: %x", di.VendorId)
+	log.Printf("Product ID: %x", di.ProductId)
+	log.Printf("Version number: %x", di.VersionNumber)
+	log.Printf("Manufacturer: %s", di.Manufacturer)
+	log.Printf("Product: %s", di.Product)
+	log.Printf("Input report length: %d", di.InputReportLength)
+	log.Printf("Output report length: %d", di.OutputReportLength)
+	log.Printf("Feature report length: %d", di.FeatureReportLength)
+
+	return
+}
+
+// Close function close a device
+func (d *Device) Close() {
+	if d.d != nil {
+		d.d.Close()
+	}
+}
+
+// Set functuion sets mode and colors
+func (d *Device) Set() (err error) {
+
+	err = d.SetColor("left", d.CurrentTheme.Left.ColorName, d.Intensity)
+	if err != nil {
+		return err
+	}
+	err = d.SetColor("middle", d.CurrentTheme.Middle.ColorName, d.Intensity)
+	if err != nil {
+		return err
+	}
+	err = d.SetColor("right", d.CurrentTheme.Right.ColorName, d.Intensity)
+	if err != nil {
+		return err
+	}
+
+	err = d.SetMode()
+	return
+}
+
+// SetColor function sets color to region with color and intensity
+func (d *Device) SetColor(region, color, intensity string) (err error) {
+	iRegion, ok := Regions[region]
+	if !ok {
+		return fmt.Errorf("Unknown region: %s", region)
+	}
+	iColor, ok := Colors[color]
+	if !ok {
+		return fmt.Errorf("Unknown color: %s", color)
+	}
+	iIntensity, ok := Levels[intensity]
+	if !ok {
+		return fmt.Errorf("Unknown intensity: %s", region)
+	}
+
+	data := make([]byte, 8)
+	data[0] = 1
+	data[1] = 2
+	data[2] = 66
+	data[3] = byte(iRegion)
+	data[4] = byte(iColor)
+	data[5] = byte(iIntensity)
+	data[6] = 0
+	data[7] = 236
+	err = d.d.WriteFeature(data)
+
+	return
+}
+
+// SetMode function sets mode to keyboard
+func (d *Device) SetMode() (err error) {
+	period := 2
+
+	err = d.setMode(0, d.CurrentTheme.Left, period)
+	if err != nil {
+		return err
+	}
+	err = d.setMode(3, d.CurrentTheme.Left, period)
+	if err != nil {
+		return err
+	}
+	err = d.setMode(6, d.CurrentTheme.Left, period)
+	if err != nil {
+		return err
+	}
+
+	err = d.commit()
+
+	return
+}
+
+func (d *Device) setMode(begin int, r Region, period int) (err error) {
+	err = d.sendData(begin+1, Colors[r.ColorName], Levels[d.Intensity], 0)
+	if err != nil {
+		return err
+	}
+	err = d.sendData(begin+2, Colors[r.SecondaryName], Levels[d.Intensity], 0)
+	if err != nil {
+		return err
+	}
+	err = d.sendData(begin+3, period, period, period)
+	if err != nil {
+		return err
+	}
+	return
+}
+
+func (d *Device) sendData(section, color, intensity, period int) (err error) {
+	data := make([]byte, 8)
+	data[0] = 1
+	data[1] = 2
+	data[2] = 67
+	data[3] = byte(section)
+	data[4] = byte(color)
+	data[5] = byte(intensity)
+	data[6] = byte(period)
+	data[7] = 236
+
+	err = d.d.WriteFeature(data)
+	return
+}
+
+func (d *Device) commit() (err error) {
+	data := make([]byte, 8)
+	data[0] = 1
+	data[1] = 2
+	data[2] = 65
+	data[3] = byte(Modes[d.Mode])
+	data[4] = 0
+	data[5] = 0
+	data[6] = 0
+	data[7] = 236
+
+	err = d.d.WriteFeature(data)
+	return
+
+}
