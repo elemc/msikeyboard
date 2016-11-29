@@ -20,11 +20,9 @@ type Codes map[string]int
 
 const (
 	// VID is a Vendor ID for MSI keyboard
-	//VID = 6000
-	VID = 0x046d
+	VID = 0x1770
 	// PID is a Product ID for MSI keyboards
-	//PID = 65280
-	PID = 0xc31c
+	PID = 0xff00
 )
 
 var (
