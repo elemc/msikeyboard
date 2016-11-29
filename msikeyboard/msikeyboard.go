@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/boombuler/hid"
+	"github.com/GeertJohan/go.hid"
 )
 
 // Device is a main struct
 type Device struct {
-	d            hid.Device
+	d            *hid.Device
 	CurrentTheme Theme
 	Intensity    string
 	Mode         string
@@ -28,10 +28,14 @@ const (
 )
 
 var (
+	// Regions is a regions map
 	Regions Codes
-	Colors  Codes
-	Levels  Codes
-	Modes   Codes
+	// Colors is a colors map
+	Colors Codes
+	// Levels is a levels map
+	Levels Codes
+	// Modes is a modes map
+	Modes Codes
 )
 
 func init() {
@@ -72,10 +76,12 @@ func getCodesKeys(data Codes) (result []string) {
 	return result
 }
 
+// GetAllColors function returns color list
 func GetAllColors() []string {
 	return getCodesKeys(Colors)
 }
 
+// GetAllModes function returns all modes
 func GetAllModes() []string {
 	return getCodesKeys(Modes)
 }
@@ -83,22 +89,27 @@ func GetAllModes() []string {
 // GetDevice function getting keyboard device pointer
 func GetDevice() (device *Device, err error) {
 	d := new(Device)
-	deviceInfo := hid.FindDevices(VID, PID)
 
-	di := <-deviceInfo
-	d.d, err = di.Open()
+	dil, err := hid.Enumerate(VID, PID)
 	if err != nil {
-		return
+		return nil, err
 	}
+	if len(dil) == 0 {
+		return nil, fmt.Errorf("device %4x:%4x not found", VID, PID)
+	}
+	di := dil[0]
+
+	d.d, err = di.Device()
+	if err != nil {
+		return nil, err
+	}
+
 	log.Printf("Path: %s", di.Path)
 	log.Printf("Vendor ID: %x", di.VendorId)
 	log.Printf("Product ID: %x", di.ProductId)
-	log.Printf("Version number: %x", di.VersionNumber)
+	log.Printf("Serial number: %x", di.SerialNumber)
 	log.Printf("Manufacturer: %s", di.Manufacturer)
 	log.Printf("Product: %s", di.Product)
-	log.Printf("Input report length: %d", di.InputReportLength)
-	log.Printf("Output report length: %d", di.OutputReportLength)
-	log.Printf("Feature report length: %d", di.FeatureReportLength)
 
 	return
 }
@@ -154,7 +165,7 @@ func (d *Device) SetColor(region, color, intensity string) (err error) {
 	data[5] = byte(iIntensity)
 	data[6] = 0
 	data[7] = 236
-	err = d.d.WriteFeature(data)
+	_, err = d.d.SendFeatureReport(data)
 
 	return
 }
@@ -208,7 +219,7 @@ func (d *Device) sendData(section, color, intensity, period int) (err error) {
 	data[6] = byte(period)
 	data[7] = 236
 
-	err = d.d.WriteFeature(data)
+	_, err = d.d.SendFeatureReport(data)
 	return
 }
 
@@ -223,7 +234,7 @@ func (d *Device) commit() (err error) {
 	data[6] = 0
 	data[7] = 236
 
-	err = d.d.WriteFeature(data)
+	_, err = d.d.SendFeatureReport(data)
 	return
 
 }

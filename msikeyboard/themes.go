@@ -2,11 +2,13 @@ package msikeyboard
 
 import "fmt"
 
+// Region struct set primary and secondary colors
 type Region struct {
 	ColorName     string
 	SecondaryName string
 }
 
+// Theme is a struct for theme
 type Theme struct {
 	Name   string
 	Left   Region
@@ -14,6 +16,7 @@ type Theme struct {
 	Right  Region
 }
 
+// Themes map of Theme
 type Themes map[string]Theme
 
 var (
