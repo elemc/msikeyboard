@@ -1,11 +1,10 @@
 package msikeyboard
 
 /*
-//////#cgo pkg-config: msikeyboard
+//#cgo pkg-config: msikeyboard
 #cgo LDFLAGS: -lmsikeyboard -L/usr/local/lib
 #cgo CFLAGS: -I/usr/local/include
 #include <msikeyboard/msikeyboard.h>
-#include <stdlib.h>
 */
 import "C"
 import "fmt"
