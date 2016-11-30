@@ -10,65 +10,99 @@ import (
 )
 
 const (
-	blackColor = "black"
+	blackColor            = "off"
+	defaultColorIntensity = "red:high"
 )
 
 var (
-	backlight bool
-	color     string
-	blink     int
-	intensity string
-	theme     string
-	mode      string
+	// backlight bool
+	// color     string
+	// blink     int
+	// intensity string
+
+	mode   string
+	theme  string
+	left   string
+	middle string
+	right  string
+	all    string
 )
 
 func init() {
-	flag.BoolVar(&backlight, "backlight", true, "enable backlight (set to true) or disable (set to false)")
-	flag.StringVar(&color, "color", "white", fmt.Sprintf("set color: %s", strings.Join(msikeyboard.GetAllColors(), ", ")))
-	//flag.IntVar(&blink, "blink", 0, "blink N ms")
-	flag.StringVar(&intensity, "intensity", "high", "set intensity applies to all regions")
-	flag.StringVar(&theme, "theme", "", fmt.Sprintf("set theme by name: %s", strings.Join(msikeyboard.GetNames(), ", ")))
-	flag.StringVar(&mode, "mode", "normal", fmt.Sprintf("set mode: %s", strings.Join(msikeyboard.GetAllModes(), ", ")))
+	colors := strings.Join(msikeyboard.GetAllColors(), ", ")
+	modes := strings.Join(msikeyboard.GetAllModes(), ", ")
+	intensities := strings.Join(msikeyboard.GetAllIntensities(), ", ")
+	flag.StringVar(&left, "left", "",
+		fmt.Sprintf("color:intensity for left keyboard region (colors: %s) (intensities: %s)", colors, intensities))
+	flag.StringVar(&middle, "middle", "",
+		fmt.Sprintf("color:intensity for middle keyboard region (colors: %s) (intensities: %s)", colors, intensities))
+	flag.StringVar(&right, "right", "",
+		fmt.Sprintf("color:intensity for right keyboard region (colors: %s) (intensities: %s)", colors, intensities))
+	flag.StringVar(&all, "all", "",
+		fmt.Sprintf("color:intensity for all keyboard regions (colors: %s) (intensities: %s)", colors, intensities))
+	flag.StringVar(&mode, "mode", "normal", fmt.Sprintf("set mode: %s", modes))
+	flag.StringVar(&theme, "theme", "", fmt.Sprintf("set theme by name: %s",
+		strings.Join(msikeyboard.GetNames(), ", ")))
 }
 
 func main() {
 	flag.Parse()
-	dev, err := msikeyboard.GetDevice()
-	if err != nil {
-		log.Fatalf("%s", err)
-	}
-	defer dev.Close()
+	msikeyboard.Init()
+	defer msikeyboard.Exit()
 
-	if _, ok := msikeyboard.Colors[color]; !ok {
-		log.Fatalf("Color with name %s not found", color)
-	}
+	led := msikeyboard.LEDSetting{}
+	var err error
 
 	if theme != "" {
-		dev.CurrentTheme, err = msikeyboard.GetTheme(theme)
+		led, err = msikeyboard.GetTheme(theme)
 		if err != nil {
 			log.Fatalf(err.Error())
 		}
-	} else if backlight {
-		dev.CurrentTheme.Left.ColorName = color
-		dev.CurrentTheme.Left.SecondaryName = blackColor
-		dev.CurrentTheme.Middle.ColorName = color
-		dev.CurrentTheme.Middle.SecondaryName = blackColor
-		dev.CurrentTheme.Right.ColorName = color
-		dev.CurrentTheme.Right.SecondaryName = blackColor
-	} else {
-		dev.CurrentTheme.Left.ColorName = blackColor
-		dev.CurrentTheme.Left.SecondaryName = blackColor
-		dev.CurrentTheme.Middle.ColorName = blackColor
-		dev.CurrentTheme.Middle.SecondaryName = blackColor
-		dev.CurrentTheme.Right.ColorName = blackColor
-		dev.CurrentTheme.Right.SecondaryName = blackColor
 	}
-	dev.Intensity = intensity
-	dev.Mode = mode
+	if all != "" {
+		color, intensity := getColorIntensity(all)
+		led.Left.Color = color
+		led.Left.Intensity = intensity
+		led.Middle.Color = color
+		led.Middle.Intensity = intensity
+		led.Right.Color = color
+		led.Right.Intensity = intensity
+	} else {
+		if left != "" {
+			led.Left.Color, led.Left.Intensity = getColorIntensity(left)
+		}
+		if middle != "" {
+			led.Middle.Color, led.Middle.Intensity = getColorIntensity(middle)
+		}
+		if right != "" {
+			led.Right.Color, led.Right.Intensity = getColorIntensity(right)
+		}
+	}
+	if mode != "" {
+		led.Mode = mode
+	}
 
-	err = dev.Set()
+	err = led.Check()
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatalf("Error in parsing parameters: %s", err)
+	}
+
+	err = led.Set()
+	if err != nil {
+		log.Fatalf("Error %s", err)
 	}
 	os.Exit(0)
+}
+
+func getColorIntensity(arg string) (color, intensity string) {
+	paramList := strings.Split(arg, ":")
+	if len(paramList) < 2 {
+		color = arg
+		intensity = "normal"
+		return
+	}
+
+	color = paramList[0]
+	intensity = paramList[1]
+	return
 }

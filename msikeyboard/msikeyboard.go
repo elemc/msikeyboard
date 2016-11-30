@@ -1,238 +1,156 @@
 package msikeyboard
 
-import (
-	"fmt"
-	"log"
-
-	"github.com/GeertJohan/go.hid"
-)
-
-// Device is a main struct
-type Device struct {
-	d            *hid.Device
-	CurrentTheme Theme
-	Intensity    string
-	Mode         string
-}
-
-// Codes type for match number by name
-type Codes map[string]int
-
-const (
-	// VID is a Vendor ID for MSI keyboard
-	VID = 0x1770
-	// PID is a Product ID for MSI keyboards
-	PID = 0xff00
-)
+/*
+//////#cgo pkg-config: msikeyboard
+#cgo LDFLAGS: -lmsikeyboard -L/usr/local/lib
+#cgo CFLAGS: -I/usr/local/include
+#include <msikeyboard/msikeyboard.h>
+#include <stdlib.h>
+*/
+import "C"
+import "fmt"
 
 var (
-	// Regions is a regions map
-	Regions Codes
-	// Colors is a colors map
-	Colors Codes
-	// Levels is a levels map
-	Levels Codes
-	// Modes is a modes map
-	Modes Codes
+	colors      = [...]string{"off", "red", "orange", "yellow", "green", "sky", "blue", "purple", "white"}
+	modes       = [...]string{"normal", "gaming", "breathe", "demo", "wave"}
+	intensities = [...]string{"high", "medium", "low", "light"}
 )
 
-func init() {
-	Regions = make(Codes)
-	Regions["left"] = 1
-	Regions["middle"] = 2
-	Regions["right"] = 3
-
-	Colors = make(Codes)
-	Colors["black"] = 0
-	Colors["red"] = 1
-	Colors["orange"] = 2
-	Colors["yellow"] = 3
-	Colors["green"] = 4
-	Colors["cyan"] = 5
-	Colors["blue"] = 6
-	Colors["purple"] = 7
-	Colors["white"] = 8
-
-	Levels = make(Codes)
-	Levels["light"] = 3
-	Levels["low"] = 2
-	Levels["med"] = 1
-	Levels["high"] = 0
-
-	Modes = make(Codes)
-	Modes["normal"] = 1
-	Modes["gaming"] = 2
-	Modes["breathe"] = 3
-	Modes["demo"] = 4
-	Modes["wave"] = 5
+// SideColorIntensity strcut hold color and intensity for region
+type SideColorIntensity struct {
+	Color     string
+	Intensity string
 }
 
-func getCodesKeys(data Codes) (result []string) {
-	for k := range data {
-		result = append(result, k)
+// LEDSetting struct hold 3 regions and mode
+type LEDSetting struct {
+	Left   SideColorIntensity
+	Middle SideColorIntensity
+	Right  SideColorIntensity
+	Mode   string
+}
+
+// Init function inits HID API and create new pointer for LEDSetting
+func Init() (led *LEDSetting, err error) {
+	var result C.int
+	result = C.init_msi_keyboard()
+	if result < 0 {
+		return nil, fmt.Errorf("Error on initialization MSI keyboard")
 	}
-	return result
+	led = new(LEDSetting)
+	return
 }
 
-// GetAllColors function returns color list
+// Exit function free and destroy HID API
+func Exit() (err error) {
+	result := C.free_msi_keyboard()
+	if result < 0 {
+		return fmt.Errorf("Error on free MSI keyboard")
+	}
+	return
+}
+
+// Set function sets settings for keyboard
+func (led *LEDSetting) Set() (err error) {
+	err = led.Left.setColor("left")
+	if err != nil {
+		return
+	}
+	err = led.Middle.setColor("middle")
+	if err != nil {
+		return
+	}
+	err = led.Right.setColor("right")
+	if err != nil {
+		return
+	}
+
+	if led.Mode != "" {
+		err = setMode(led.Mode)
+	}
+
+	return
+}
+
+// Check function checks names and settings
+func (led *LEDSetting) Check() (err error) {
+	err = led.Left.checkSide("left")
+	if err != nil {
+		return
+	}
+	err = led.Middle.checkSide("middle")
+	if err != nil {
+		return
+	}
+	err = led.Right.checkSide("right")
+	if err != nil {
+		return
+	}
+
+	if !checkName(modes[:], led.Mode) {
+		return fmt.Errorf("unknown mode %s", led.Mode)
+	}
+
+	return
+}
+
+func (side *SideColorIntensity) setColor(region string) (err error) {
+	if side.Color == "" {
+		return
+	}
+	err = setColor(region, side.Color, side.Intensity)
+	return
+}
+
+func (side *SideColorIntensity) checkSide(name string) error {
+	if !checkName(colors[:], side.Color) {
+		return fmt.Errorf("unknown color for %s region %s", name, side.Color)
+	}
+	if !checkName(intensities[:], side.Intensity) {
+		return fmt.Errorf("unknown intensity for %s region %s", name, side.Intensity)
+	}
+	return nil
+}
+
+func checkName(list []string, name string) bool {
+	found := false
+	for _, l := range list {
+		if l == name {
+			found = true
+			break
+		}
+	}
+	return found
+}
+
+// GetAllColors function returns all color names
 func GetAllColors() []string {
-	return getCodesKeys(Colors)
+	return colors[:]
 }
 
-// GetAllModes function returns all modes
+// GetAllModes function returns all mode names
 func GetAllModes() []string {
-	return getCodesKeys(Modes)
+	return modes[:]
 }
 
-// GetDevice function getting keyboard device pointer
-func GetDevice() (device *Device, err error) {
-	d := new(Device)
-
-	dil, err := hid.Enumerate(VID, PID)
-	if err != nil {
-		return nil, err
-	}
-	if len(dil) == 0 {
-		return nil, fmt.Errorf("device %4x:%4x not found", VID, PID)
-	}
-	di := dil[0]
-
-	d.d, err = di.Device()
-	if err != nil {
-		return nil, err
-	}
-
-	log.Printf("Path: %s", di.Path)
-	log.Printf("Vendor ID: %x", di.VendorId)
-	log.Printf("Product ID: %x", di.ProductId)
-	log.Printf("Serial number: %x", di.SerialNumber)
-	log.Printf("Manufacturer: %s", di.Manufacturer)
-	log.Printf("Product: %s", di.Product)
-
-	return
+// GetAllIntensities function returns all intensity names
+func GetAllIntensities() []string {
+	return intensities[:]
 }
 
-// Close function close a device
-func (d *Device) Close() {
-	if d.d != nil {
-		d.d.Close()
-	}
-}
-
-// Set functuion sets mode and colors
-func (d *Device) Set() (err error) {
-
-	err = d.SetColor("left", d.CurrentTheme.Left.ColorName, d.Intensity)
-	if err != nil {
-		return err
-	}
-	err = d.SetColor("middle", d.CurrentTheme.Middle.ColorName, d.Intensity)
-	if err != nil {
-		return err
-	}
-	err = d.SetColor("right", d.CurrentTheme.Right.ColorName, d.Intensity)
-	if err != nil {
-		return err
-	}
-
-	err = d.SetMode()
-	return
-}
-
-// SetColor function sets color to region with color and intensity
-func (d *Device) SetColor(region, color, intensity string) (err error) {
-	iRegion, ok := Regions[region]
-	if !ok {
-		return fmt.Errorf("Unknown region: %s", region)
-	}
-	iColor, ok := Colors[color]
-	if !ok {
-		return fmt.Errorf("Unknown color: %s", color)
-	}
-	iIntensity, ok := Levels[intensity]
-	if !ok {
-		return fmt.Errorf("Unknown intensity: %s", region)
-	}
-
-	data := make([]byte, 8)
-	data[0] = 1
-	data[1] = 2
-	data[2] = 66
-	data[3] = byte(iRegion)
-	data[4] = byte(iColor)
-	data[5] = byte(iIntensity)
-	data[6] = 0
-	data[7] = 236
-	_, err = d.d.SendFeatureReport(data)
-
-	return
-}
-
-// SetMode function sets mode to keyboard
-func (d *Device) SetMode() (err error) {
-	period := 2
-
-	err = d.setMode(0, d.CurrentTheme.Left, period)
-	if err != nil {
-		return err
-	}
-	err = d.setMode(3, d.CurrentTheme.Left, period)
-	if err != nil {
-		return err
-	}
-	err = d.setMode(6, d.CurrentTheme.Left, period)
-	if err != nil {
-		return err
-	}
-
-	err = d.commit()
-
-	return
-}
-
-func (d *Device) setMode(begin int, r Region, period int) (err error) {
-	err = d.sendData(begin+1, Colors[r.ColorName], Levels[d.Intensity], 0)
-	if err != nil {
-		return err
-	}
-	err = d.sendData(begin+2, Colors[r.SecondaryName], Levels[d.Intensity], 0)
-	if err != nil {
-		return err
-	}
-	err = d.sendData(begin+3, period, period, period)
-	if err != nil {
-		return err
+//// cgo methods
+func setColor(region, color, intensity string) (err error) {
+	result := C.set_color_by_names(C.CString(region), C.CString(color), C.CString(intensity))
+	if result < 0 {
+		err = fmt.Errorf("error in set color (%s, %s, %s)", region, color, intensity)
 	}
 	return
 }
 
-func (d *Device) sendData(section, color, intensity, period int) (err error) {
-	data := make([]byte, 8)
-	data[0] = 1
-	data[1] = 2
-	data[2] = 67
-	data[3] = byte(section)
-	data[4] = byte(color)
-	data[5] = byte(intensity)
-	data[6] = byte(period)
-	data[7] = 236
-
-	_, err = d.d.SendFeatureReport(data)
+func setMode(mode string) (err error) {
+	result := C.set_mode_by_name(C.CString(mode))
+	if result < 0 {
+		err = fmt.Errorf("error in set mode %s", mode)
+	}
 	return
-}
-
-func (d *Device) commit() (err error) {
-	data := make([]byte, 8)
-	data[0] = 1
-	data[1] = 2
-	data[2] = 65
-	data[3] = byte(Modes[d.Mode])
-	data[4] = 0
-	data[5] = 0
-	data[6] = 0
-	data[7] = 236
-
-	_, err = d.d.SendFeatureReport(data)
-	return
-
 }
