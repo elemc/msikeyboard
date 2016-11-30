@@ -113,6 +113,9 @@ func (side *SideColorIntensity) checkSide(name string) error {
 }
 
 func checkName(list []string, name string) bool {
+	if name == "" {
+		return true
+	}
 	found := false
 	for _, l := range list {
 		if l == name {

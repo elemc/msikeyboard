@@ -40,7 +40,7 @@ func init() {
 		fmt.Sprintf("color:intensity for right keyboard region (colors: %s) (intensities: %s)", colors, intensities))
 	flag.StringVar(&all, "all", "",
 		fmt.Sprintf("color:intensity for all keyboard regions (colors: %s) (intensities: %s)", colors, intensities))
-	flag.StringVar(&mode, "mode", "normal", fmt.Sprintf("set mode: %s", modes))
+	flag.StringVar(&mode, "mode", "", fmt.Sprintf("set mode: %s", modes))
 	flag.StringVar(&theme, "theme", "", fmt.Sprintf("set theme by name: %s",
 		strings.Join(msikeyboard.GetNames(), ", ")))
 }
@@ -98,7 +98,7 @@ func getColorIntensity(arg string) (color, intensity string) {
 	paramList := strings.Split(arg, ":")
 	if len(paramList) < 2 {
 		color = arg
-		intensity = "normal"
+		intensity = "high"
 		return
 	}
 
