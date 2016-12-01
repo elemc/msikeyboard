@@ -4,7 +4,7 @@ Is a CLI for change color, intensity and mode on MSI keyboards
 
 gomsikeyboard
 -------------
-Is a go library for libmsikeyboard
+Is a go library for libmsikeyboard ( https://github.com/elemc/libmsikeyboard )
 
 Build
 =====
