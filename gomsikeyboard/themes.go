@@ -1,4 +1,4 @@
-package msikeyboard
+package gomsikeyboard
 
 import "fmt"
 

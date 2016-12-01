@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gomsikeyboard/msikeyboard"
 	"log"
+	"msikeyboard/gomsikeyboard"
 	"os"
 	"strings"
 )
@@ -29,9 +29,9 @@ var (
 )
 
 func init() {
-	colors := strings.Join(msikeyboard.GetAllColors(), ", ")
-	modes := strings.Join(msikeyboard.GetAllModes(), ", ")
-	intensities := strings.Join(msikeyboard.GetAllIntensities(), ", ")
+	colors := strings.Join(gomsikeyboard.GetAllColors(), ", ")
+	modes := strings.Join(gomsikeyboard.GetAllModes(), ", ")
+	intensities := strings.Join(gomsikeyboard.GetAllIntensities(), ", ")
 	flag.StringVar(&left, "left", "",
 		fmt.Sprintf("color:intensity for left keyboard region (colors: %s) (intensities: %s)", colors, intensities))
 	flag.StringVar(&middle, "middle", "",
@@ -42,19 +42,19 @@ func init() {
 		fmt.Sprintf("color:intensity for all keyboard regions (colors: %s) (intensities: %s)", colors, intensities))
 	flag.StringVar(&mode, "mode", "", fmt.Sprintf("set mode: %s", modes))
 	flag.StringVar(&theme, "theme", "", fmt.Sprintf("set theme by name: %s",
-		strings.Join(msikeyboard.GetNames(), ", ")))
+		strings.Join(gomsikeyboard.GetNames(), ", ")))
 }
 
 func main() {
 	flag.Parse()
-	msikeyboard.Init()
-	defer msikeyboard.Exit()
+	gomsikeyboard.Init()
+	defer gomsikeyboard.Exit()
 
-	led := msikeyboard.LEDSetting{}
+	led := gomsikeyboard.LEDSetting{}
 	var err error
 
 	if theme != "" {
-		led, err = msikeyboard.GetTheme(theme)
+		led, err = gomsikeyboard.GetTheme(theme)
 		if err != nil {
 			log.Fatalf(err.Error())
 		}
