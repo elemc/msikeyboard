@@ -1,9 +1,7 @@
 package gomsikeyboard
 
 /*
-//#cgo pkg-config: msikeyboard
-#cgo LDFLAGS: -lmsikeyboard -L/usr/local/lib
-#cgo CFLAGS: -I/usr/local/include
+#cgo pkg-config: msikeyboard
 #include <msikeyboard/msikeyboard.h>
 */
 import "C"

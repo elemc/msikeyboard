@@ -4,9 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"msikeyboard/gomsikeyboard"
 	"os"
 	"strings"
+
+	"github.com/elemc/msikeyboard/gomsikeyboard"
 )
 
 const (
