@@ -27,6 +27,6 @@ URL arguments:
 * mode - is a mode
 
 Example URLs:
-http://localhost:9097/?theme=cool
-http://localhost:9097/set?left-color=white&left-intensity=low&middle-color=blue&middle-intensity=light&right-color=red&right-intensity=high&mode=gaming
-http://localhost:9097/set?all-color=white&all-intensity=high
+* http://localhost:9097/?theme=cool
+* http://localhost:9097/set?left-color=white&left-intensity=low&middle-color=blue&middle-intensity=light&right-color=red&right-intensity=high&mode=gaming
+* http://localhost:9097/set?all-color=white&all-intensity=high
