@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/elemc/msikeyboard/gomsikeyboard"
+	"github.com/elemc/msikeyboard/httpserver"
 )
 
 const (
@@ -27,6 +28,9 @@ var (
 	middle string
 	right  string
 	all    string
+
+	addr      string
+	startHTTP bool
 )
 
 func init() {
@@ -44,6 +48,9 @@ func init() {
 	flag.StringVar(&mode, "mode", "", fmt.Sprintf("set mode: %s", modes))
 	flag.StringVar(&theme, "theme", "", fmt.Sprintf("set theme by name: %s",
 		strings.Join(gomsikeyboard.GetNames(), ", ")))
+	flag.StringVar(&addr, "addr", "localhost:9097",
+		"set http server address as host:port for listen")
+	flag.BoolVar(&startHTTP, "start-http", true, "set start http server or no")
 }
 
 func main() {
@@ -91,6 +98,18 @@ func main() {
 	err = led.Set()
 	if err != nil {
 		log.Fatalf("Error %s", err)
+	}
+
+	if startHTTP {
+		// start http server
+		server := httpserver.Server{}
+		server.Addr = addr
+		defer server.Close()
+		err = server.Start()
+		if err != nil {
+			log.Printf("EXIT: %s", err)
+			os.Exit(1)
+		}
 	}
 	os.Exit(0)
 }
