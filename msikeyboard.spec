@@ -25,15 +25,15 @@
 # https://github.com/elemc/msikeyboard
 %global provider_prefix %{provider}.%{provider_tld}/%{project}/%{repo}
 %global import_path     %{provider_prefix}
-%global commit          5f1de22cbd242db34714b102e2f82c5167fa7670
+%global commit          c469489c72271910746b3155e08d230c8d85e80a
 %global shortcommit     %(c=%{commit}; echo ${c:0:7})
 
 #Name:           golang-%{provider}-%{project}-%{repo}
 Name:           %{repo}
 Version:        1
-Release:        0.1.git%{shortcommit}%{?dist}
-Summary:        !!!!FILL!!!!
-License:        !!!!FILL!!!!
+Release:        0.2.git%{shortcommit}%{?dist}
+Summary:        msikeyboard is a CLI tool for change color, intensity and modes on MSI keyboard
+License:        GPLv3
 URL:            https://%{provider_prefix}
 Source0:        https://%{provider_prefix}/archive/%{commit}/%{repo}-%{shortcommit}.tar.gz
 
@@ -99,7 +99,12 @@ export GOPATH=$(pwd):%{gopath}
 export GOPATH=$(pwd):$(pwd)/Godeps/_workspace:%{gopath}
 %endif
 
+%if 0%{?rhel} == 7
+go build -compiler gc -ldflags "${LDFLAGS}" -o bin/%{repo} %{import_path}
+%else
 %gobuild -o bin/%{repo} %{import_path}
+%endif
+
 
 %install
 install -d -p %{buildroot}%{_bindir}
@@ -148,25 +153,26 @@ export GOPATH=%{buildroot}/%{gopath}:$(pwd)/Godeps/_workspace:%{gopath}
 %{!?_licensedir:%global license %doc}
 
 %files
-%license 
+%license
 %doc README.md
 %{_bindir}/%{repo}
 
 %if 0%{?with_devel}
 %files devel -f devel.file-list
-%license 
+%license
 %doc README.md
 %dir %{gopath}/src/%{provider}.%{provider_tld}/%{project}
 %endif
 
 %if 0%{?with_unit_test} && 0%{?with_devel}
 %files unit-test-devel -f unit-test-devel.file-list
-%license 
+%license
 %doc README.md
 %endif
 
 %changelog
-* Thu Dec 01 2016 Алексей <a.panov@maximatelecom.ru> - 0-0.1.git5f1de22
+* Wed Dec 07 2016 Alexei Panov <me AT elemc DOT name> 1-0.2.gitc469489
+- Added new version with REST API
+
+* Thu Dec 01 2016 Alexei Panov <me AT elemc DOT name> - 0-0.1.git5f1de22
 - First package for Fedora
-
-
