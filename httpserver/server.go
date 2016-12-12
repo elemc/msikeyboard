@@ -17,13 +17,14 @@ type Server struct {
 func (s *Server) Start() (err error) {
 	http.HandleFunc("/set", s.handlerSet)
 	http.HandleFunc("/test", s.handlerTest)
+	log.Printf("starting HTTP server...")
 	err = http.ListenAndServe(s.Addr, nil)
 	return
 }
 
 // Close function for close resource when server stopped
 func (s *Server) Close() {
-
+	log.Printf("stopping HTTP server")
 }
 
 func (s *Server) handlerSet(w http.ResponseWriter, r *http.Request) {
