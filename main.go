@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/elemc/msikeyboard/dbusserver"
 	"github.com/elemc/msikeyboard/gomsikeyboard"
 	"github.com/elemc/msikeyboard/httpserver"
 )
@@ -31,6 +32,8 @@ var (
 
 	addr      string
 	startHTTP bool
+
+	enabelDBus bool
 )
 
 func init() {
@@ -51,6 +54,7 @@ func init() {
 	flag.StringVar(&addr, "addr", "localhost:9097",
 		"set http server address as host:port for listen")
 	flag.BoolVar(&startHTTP, "start-http", true, "set start http server or no")
+	flag.BoolVar(&enabelDBus, "start-dbus", true, "set start dbus server or non")
 }
 
 func main() {
@@ -105,12 +109,27 @@ func main() {
 		server := httpserver.Server{}
 		server.Addr = addr
 		defer server.Close()
-		err = server.Start()
+		if enabelDBus {
+			go func() {
+				err = server.Start()
+
+			}()
+		} else {
+			err = server.Start()
+		}
 		if err != nil {
 			log.Printf("EXIT: %s", err)
 			os.Exit(1)
 		}
 	}
+	if enabelDBus {
+		dbus := dbusserver.DBusServer{}
+		err = dbus.Start()
+		if err != nil {
+			log.Fatalf("Error in running dbus server: %s", err)
+		}
+	}
+
 	os.Exit(0)
 }
 
