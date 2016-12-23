@@ -10,12 +10,6 @@ import (
 	"unsafe"
 )
 
-var (
-	colors      = [...]string{"off", "red", "orange", "yellow", "green", "sky", "blue", "purple", "white"}
-	modes       = [...]string{"normal", "gaming", "breathe", "demo", "wave"}
-	intensities = [...]string{"high", "medium", "low", "light"}
-)
-
 // SideColorIntensity strcut hold color and intensity for region
 type SideColorIntensity struct {
 	Color     string
@@ -87,7 +81,7 @@ func (led *LEDSetting) Check() (err error) {
 		return
 	}
 
-	if !checkName(modes[:], led.Mode) {
+	if !checkName(GetAllModes(), led.Mode) {
 		return fmt.Errorf("unknown mode %s", led.Mode)
 	}
 
@@ -103,10 +97,10 @@ func (side *SideColorIntensity) setColor(region string) (err error) {
 }
 
 func (side *SideColorIntensity) checkSide(name string) error {
-	if !checkName(colors[:], side.Color) {
+	if !checkName(GetAllColors(), side.Color) {
 		return fmt.Errorf("unknown color for %s region %s", name, side.Color)
 	}
-	if !checkName(intensities[:], side.Intensity) {
+	if !checkName(GetAllIntensities(), side.Intensity) {
 		return fmt.Errorf("unknown intensity for %s region %s", name, side.Intensity)
 	}
 	return nil
