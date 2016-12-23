@@ -5,7 +5,10 @@ package gomsikeyboard
 #include <msikeyboard/msikeyboard.h>
 */
 import "C"
-import "fmt"
+import (
+	"fmt"
+	"unsafe"
+)
 
 var (
 	colors      = [...]string{"off", "red", "orange", "yellow", "green", "sky", "blue", "purple", "white"}
@@ -123,19 +126,40 @@ func checkName(list []string, name string) bool {
 	return found
 }
 
+func getStringSliceForFunc(list **C.char, size C.size_t) []string {
+	var result []string
+	slice := (*[1 << 31]*C.char)(unsafe.Pointer(list))[:size:size]
+
+	//for i := 0; i < int(size); i++ {
+	for _, l := range slice {
+		item := l
+		sitem := C.GoString(item)
+		result = append(result, sitem)
+	}
+	C.free(unsafe.Pointer(list))
+
+	return result
+}
+
 // GetAllColors function returns all color names
 func GetAllColors() []string {
-	return colors[:]
+	var size C.size_t
+	list := C.get_colors(&size)
+	return getStringSliceForFunc(list, size)
 }
 
 // GetAllModes function returns all mode names
 func GetAllModes() []string {
-	return modes[:]
+	var size C.size_t
+	list := C.get_modes(&size)
+	return getStringSliceForFunc(list, size)
 }
 
 // GetAllIntensities function returns all intensity names
 func GetAllIntensities() []string {
-	return intensities[:]
+	var size C.size_t
+	list := C.get_intensities(&size)
+	return getStringSliceForFunc(list, size)
 }
 
 //// cgo methods
