@@ -50,12 +50,6 @@ func init() {
 			fmt.Sprintf("color:intensity for %s keyboard region (colors: %s) (intensities: %s)", region, colors, intensities))
 	}
 
-	// flag.StringVar(&left, "left", "",
-	// 	fmt.Sprintf("color:intensity for left keyboard region (colors: %s) (intensities: %s)", colors, intensities))
-	// flag.StringVar(&middle, "middle", "",
-	// 	fmt.Sprintf("color:intensity for middle keyboard region (colors: %s) (intensities: %s)", colors, intensities))
-	// flag.StringVar(&right, "right", "",
-	// 	fmt.Sprintf("color:intensity for right keyboard region (colors: %s) (intensities: %s)", colors, intensities))
 	flag.StringVar(&all, "all", "",
 		fmt.Sprintf("color:intensity for all keyboard regions (colors: %s) (intensities: %s)", colors, intensities))
 	flag.StringVar(&mode, "mode", "", fmt.Sprintf("set mode: %s", modes))
