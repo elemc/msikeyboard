@@ -12,10 +12,12 @@ var (
 func init() {
 	defaultThemes = make(Themes)
 	cool := LEDSetting{}
-	cool.Left.Color = "green"
-	cool.Middle.Color = "yellow"
-	cool.Right.Color = "yellow"
 	cool.Mode = "normal"
+	green := SideColorIntensity{Color: "green"}
+	yellow := SideColorIntensity{Color: "green"}
+	cool.Regions["left"] = green
+	cool.Regions["middle"] = yellow
+	cool.Regions["right"] = yellow
 	defaultThemes["cool"] = cool
 }
 

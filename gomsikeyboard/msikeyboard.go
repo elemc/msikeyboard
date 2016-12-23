@@ -18,10 +18,8 @@ type SideColorIntensity struct {
 
 // LEDSetting struct hold 3 regions and mode
 type LEDSetting struct {
-	Left   SideColorIntensity
-	Middle SideColorIntensity
-	Right  SideColorIntensity
-	Mode   string
+	Regions map[string]SideColorIntensity
+	Mode    string
 }
 
 // Init function inits HID API and create new pointer for LEDSetting
@@ -32,6 +30,7 @@ func Init() (led *LEDSetting, err error) {
 		return nil, fmt.Errorf("Error on initialization MSI keyboard")
 	}
 	led = new(LEDSetting)
+	led.Regions = make(map[string]SideColorIntensity)
 	return
 }
 
@@ -46,19 +45,12 @@ func Exit() (err error) {
 
 // Set function sets settings for keyboard
 func (led *LEDSetting) Set() (err error) {
-	err = led.Left.setColor("left")
-	if err != nil {
-		return
+	for region, side := range led.Regions {
+		err = side.setColor(region)
+		if err != nil {
+			return
+		}
 	}
-	err = led.Middle.setColor("middle")
-	if err != nil {
-		return
-	}
-	err = led.Right.setColor("right")
-	if err != nil {
-		return
-	}
-
 	if led.Mode != "" {
 		err = setMode(led.Mode)
 	}
@@ -68,17 +60,11 @@ func (led *LEDSetting) Set() (err error) {
 
 // Check function checks names and settings
 func (led *LEDSetting) Check() (err error) {
-	err = led.Left.checkSide("left")
-	if err != nil {
-		return
-	}
-	err = led.Middle.checkSide("middle")
-	if err != nil {
-		return
-	}
-	err = led.Right.checkSide("right")
-	if err != nil {
-		return
+	for region, side := range led.Regions {
+		err = side.checkSide(region)
+		if err != nil {
+			return
+		}
 	}
 
 	if !checkName(GetAllModes(), led.Mode) {
@@ -139,6 +125,13 @@ func getStringSliceForFunc(list **C.char, size C.size_t) []string {
 func GetAllColors() []string {
 	var size C.size_t
 	list := C.get_colors(&size)
+	return getStringSliceForFunc(list, size)
+}
+
+// GetAllRegions function returns all region names
+func GetAllRegions() []string {
+	var size C.size_t
+	list := C.get_regions(&size)
 	return getStringSliceForFunc(list, size)
 }
 

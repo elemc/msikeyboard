@@ -46,23 +46,24 @@ func (s *Server) handlerSet(w http.ResponseWriter, r *http.Request) {
 	}
 	led.Mode = mode
 
-	led.Left.Color = r.Form.Get("left-color")
-	led.Left.Intensity = r.Form.Get("left-intensity")
-	led.Middle.Color = r.Form.Get("middle-color")
-	led.Middle.Intensity = r.Form.Get("middle-intensity")
-	led.Right.Color = r.Form.Get("right-color")
-	led.Right.Intensity = r.Form.Get("right-intensity")
+	leftSide := gomsikeyboard.SideColorIntensity{Color: r.FormValue("left-color"), Intensity: r.FormValue("left-intensity")}
+	middleSide := gomsikeyboard.SideColorIntensity{Color: r.FormValue("middle-color"), Intensity: r.FormValue("middle-intensity")}
+	rightSide := gomsikeyboard.SideColorIntensity{Color: r.FormValue("right-color"), Intensity: r.FormValue("right-intensity")}
+	led.Regions["left"] = leftSide
+	led.Regions["middle"] = middleSide
+	led.Regions["right"] = rightSide
 
-	if r.Form.Get("all-color") != "" {
-		led.Left.Color = r.Form.Get("all-color")
-		led.Middle.Color = r.Form.Get("all-color")
-		led.Right.Color = r.Form.Get("all-color")
-	}
-	if r.Form.Get("all-intensity") != "" {
-		led.Left.Intensity = r.Form.Get("all-intensity")
-		led.Middle.Intensity = r.Form.Get("all-intensity")
-		led.Right.Intensity = r.Form.Get("all-intensity")
-	}
+	// TODO: Make it
+	// if r.Form.Get("all-color") != "" {
+	// 	led.Left.Color = r.Form.Get("all-color")
+	// 	led.Middle.Color = r.Form.Get("all-color")
+	// 	led.Right.Color = r.Form.Get("all-color")
+	// }
+	// if r.Form.Get("all-intensity") != "" {
+	// 	led.Left.Intensity = r.Form.Get("all-intensity")
+	// 	led.Middle.Intensity = r.Form.Get("all-intensity")
+	// 	led.Right.Intensity = r.Form.Get("all-intensity")
+	// }
 	if r.Form.Get("theme") != "" {
 		led, err = gomsikeyboard.GetTheme(r.Form.Get("theme"))
 	}

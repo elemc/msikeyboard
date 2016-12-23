@@ -77,25 +77,13 @@ func (server *DBusServer) Stop() {
 func (server *DBusServer) Set(region, color, intensity string) (result string, dbusErr *dbus.Error) {
 	result = "OK"
 	var err error
+	side := gomsikeyboard.SideColorIntensity{Color: color, Intensity: intensity}
 	if strings.ToLower(region) == "all" {
-		server.led.Left.Color = color
-		server.led.Left.Intensity = intensity
-		server.led.Middle.Color = color
-		server.led.Middle.Intensity = intensity
-		server.led.Right.Color = color
-		server.led.Right.Intensity = intensity
-	} else {
-		switch strings.ToLower(region) {
-		case "left":
-			server.led.Left.Color = color
-			server.led.Left.Intensity = intensity
-		case "middle":
-			server.led.Middle.Color = color
-			server.led.Middle.Intensity = intensity
-		case "right":
-			server.led.Right.Color = color
-			server.led.Right.Intensity = intensity
+		for _, region := range gomsikeyboard.GetAllRegions() {
+			server.led.Regions[region] = side
 		}
+	} else {
+		server.led.Regions[region] = side
 	}
 
 	err = server.led.Check()

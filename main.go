@@ -23,12 +23,13 @@ var (
 	// blink     int
 	// intensity string
 
-	mode   string
-	theme  string
-	left   string
-	middle string
-	right  string
-	all    string
+	mode        string
+	theme       string
+	flagregions map[string]*string
+	left        string
+	middle      string
+	right       string
+	all         string
 
 	addr      string
 	startHTTP bool
@@ -37,15 +38,24 @@ var (
 )
 
 func init() {
+	flagregions = make(map[string]*string)
 	colors := strings.Join(gomsikeyboard.GetAllColors(), ", ")
 	modes := strings.Join(gomsikeyboard.GetAllModes(), ", ")
 	intensities := strings.Join(gomsikeyboard.GetAllIntensities(), ", ")
-	flag.StringVar(&left, "left", "",
-		fmt.Sprintf("color:intensity for left keyboard region (colors: %s) (intensities: %s)", colors, intensities))
-	flag.StringVar(&middle, "middle", "",
-		fmt.Sprintf("color:intensity for middle keyboard region (colors: %s) (intensities: %s)", colors, intensities))
-	flag.StringVar(&right, "right", "",
-		fmt.Sprintf("color:intensity for right keyboard region (colors: %s) (intensities: %s)", colors, intensities))
+
+	regions := gomsikeyboard.GetAllRegions()
+	for _, region := range regions {
+		flagregions[region] = new(string)
+		flag.StringVar(flagregions[region], region, "",
+			fmt.Sprintf("color:intensity for %s keyboard region (colors: %s) (intensities: %s)", region, colors, intensities))
+	}
+
+	// flag.StringVar(&left, "left", "",
+	// 	fmt.Sprintf("color:intensity for left keyboard region (colors: %s) (intensities: %s)", colors, intensities))
+	// flag.StringVar(&middle, "middle", "",
+	// 	fmt.Sprintf("color:intensity for middle keyboard region (colors: %s) (intensities: %s)", colors, intensities))
+	// flag.StringVar(&right, "right", "",
+	// 	fmt.Sprintf("color:intensity for right keyboard region (colors: %s) (intensities: %s)", colors, intensities))
 	flag.StringVar(&all, "all", "",
 		fmt.Sprintf("color:intensity for all keyboard regions (colors: %s) (intensities: %s)", colors, intensities))
 	flag.StringVar(&mode, "mode", "", fmt.Sprintf("set mode: %s", modes))
@@ -72,22 +82,19 @@ func main() {
 		}
 	}
 	if all != "" {
-		color, intensity := getColorIntensity(all)
-		led.Left.Color = color
-		led.Left.Intensity = intensity
-		led.Middle.Color = color
-		led.Middle.Intensity = intensity
-		led.Right.Color = color
-		led.Right.Intensity = intensity
+		side := gomsikeyboard.SideColorIntensity{}
+		side.Color, side.Intensity = getColorIntensity(all)
+		for _, region := range gomsikeyboard.GetAllRegions() {
+			led.Regions[region] = side
+		}
 	} else {
-		if left != "" {
-			led.Left.Color, led.Left.Intensity = getColorIntensity(left)
-		}
-		if middle != "" {
-			led.Middle.Color, led.Middle.Intensity = getColorIntensity(middle)
-		}
-		if right != "" {
-			led.Right.Color, led.Right.Intensity = getColorIntensity(right)
+		for region, params := range flagregions {
+			if *params == "" {
+				continue
+			}
+			side := gomsikeyboard.SideColorIntensity{}
+			side.Color, side.Intensity = getColorIntensity(all)
+			led.Regions[region] = side
 		}
 	}
 	if mode != "" {
