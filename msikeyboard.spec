@@ -31,7 +31,7 @@
 #Name:           golang-%{provider}-%{project}-%{repo}
 Name:           %{repo}
 Version:        1
-Release:        0.2.git%{shortcommit}%{?dist}
+Release:        0.3.git%{shortcommit}%{?dist}
 Summary:        msikeyboard is a CLI tool for change color, intensity and modes on MSI keyboard
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -42,6 +42,7 @@ ExclusiveArch:  %{?go_arches:%{go_arches}}%{!?go_arches:%{ix86} x86_64 %{arm}}
 # If go_compiler is not set to 1, there is no virtual provide. Use golang instead.
 BuildRequires:  %{?go_compiler:compiler(go-compiler)}%{!?go_compiler:golang}
 BuildRequires:  libmsikeyboard-devel
+BuildRequires:  systemd
 
 %if ! 0%{?with_bundled}
 %endif
@@ -86,6 +87,15 @@ This package contains unit tests for project
 providing packages with %{import_path} prefix.
 %endif
 
+%package            daemon
+Summary:            systemd unit for start msikeyboard in daemon mode
+Requires(post):     systemd
+Requires(preun):    systemd
+Requires(postun):   systemd
+
+%{summary}
+This package contains systemd unit file for project
+
 %prep
 %setup -q -n %{repo}-%{commit}
 
@@ -108,7 +118,9 @@ go build -compiler gc -ldflags "${LDFLAGS}" -o bin/%{repo} %{import_path}
 
 %install
 install -d -p %{buildroot}%{_bindir}
+install -d -p %{buildroot}%{_unitdir}
 install -p -m 0755 bin/%{repo} %{buildroot}%{_bindir}
+install -p -m 0644 %{repo}.service %{buildroot}%{_unitdir}
 
 # source codes for building projects
 %if 0%{?with_devel}
@@ -170,7 +182,22 @@ export GOPATH=%{buildroot}/%{gopath}:$(pwd)/Godeps/_workspace:%{gopath}
 %doc README.md
 %endif
 
+%files daemon
+%{_unitdir}/%{repo}.service
+
+%post daemon
+%systemd_post %{repo}.service
+
+%preun daemon
+%systemd_preun %{repo}.service
+
+%postun daemon
+%systemd_postun %{repo}.service
+
 %changelog
+* Tue Dec 27 2016 Alexei Panov <me AT elemc DOT name> 1-0.3.git
+- Added daemon package with systemd unit
+
 * Wed Dec 07 2016 Alexei Panov <me AT elemc DOT name> 1-0.2.gitc469489
 - Added new version with REST API
 
