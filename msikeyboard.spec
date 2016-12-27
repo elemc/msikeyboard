@@ -25,7 +25,7 @@
 # https://github.com/elemc/msikeyboard
 %global provider_prefix %{provider}.%{provider_tld}/%{project}/%{repo}
 %global import_path     %{provider_prefix}
-%global commit          c469489c72271910746b3155e08d230c8d85e80a
+%global commit          395cf4a494a82e97d0527777b76192ec2ae7788e
 %global shortcommit     %(c=%{commit}; echo ${c:0:7})
 
 #Name:           golang-%{provider}-%{project}-%{repo}
@@ -92,7 +92,9 @@ Summary:            systemd unit for start msikeyboard in daemon mode
 Requires(post):     systemd
 Requires(preun):    systemd
 Requires(postun):   systemd
+Requires:           %{name} = %{version}-%{release}
 
+%description        daemon
 %{summary}
 This package contains systemd unit file for project
 
@@ -108,6 +110,8 @@ export GOPATH=$(pwd):%{gopath}
 %else
 export GOPATH=$(pwd):$(pwd)/Godeps/_workspace:%{gopath}
 %endif
+
+go get -u github.com/godbus/dbus
 
 %if 0%{?rhel} == 7
 go build -compiler gc -ldflags "${LDFLAGS}" -o bin/%{repo} %{import_path}
