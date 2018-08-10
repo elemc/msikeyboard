@@ -37,7 +37,7 @@ func GetNames() (result []string) {
 }
 
 // GetTheme function for return theme from default themes by name
-func GetTheme(name string) (theme LEDSetting, err error) {
+func GetTheme(name string) (theme *LEDSetting, err error) {
 	theme, ok := defaultThemes[name]
 	if !ok {
 		return theme, fmt.Errorf("theme with giving name %s not found", name)
