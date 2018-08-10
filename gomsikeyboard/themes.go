@@ -6,7 +6,7 @@ import (
 )
 
 // Themes map of Theme
-type Themes map[string]LEDSetting
+type Themes map[string]*LEDSetting
 
 var (
 	defaultThemes Themes
