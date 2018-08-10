@@ -84,7 +84,7 @@ func (s *Server) handlerSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := s.getLEDData(&led)
+	data, err := s.getLEDData(led)
 	if err != nil {
 		log.Printf("ERROR: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
