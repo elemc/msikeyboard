@@ -1,6 +1,9 @@
 package gomsikeyboard
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 // Themes map of Theme
 type Themes map[string]LEDSetting
@@ -11,7 +14,11 @@ var (
 
 func init() {
 	defaultThemes = make(Themes)
-	cool := LEDSetting{}
+	cool, err := Init()
+	if err != nil {
+		log.Printf("Unable to initialize default theme: %s", err)
+		return
+	}
 	cool.Mode = "normal"
 	green := SideColorIntensity{Color: "green"}
 	yellow := SideColorIntensity{Color: "green"}
