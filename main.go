@@ -66,7 +66,7 @@ func main() {
 	gomsikeyboard.Init()
 	defer gomsikeyboard.Exit()
 
-	led := gomsikeyboard.LEDSetting{}
+	led := &gomsikeyboard.LEDSetting{}
 	var err error
 
 	if theme != "" {

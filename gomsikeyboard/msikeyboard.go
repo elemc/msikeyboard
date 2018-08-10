@@ -3,6 +3,7 @@ package gomsikeyboard
 /*
 #cgo pkg-config: msikeyboard
 #include <msikeyboard/msikeyboard.h>
+#include <stdlib.h>
 */
 import "C"
 import (
