@@ -66,7 +66,9 @@ func main() {
 	gomsikeyboard.Init()
 	defer gomsikeyboard.Exit()
 
-	led := &gomsikeyboard.LEDSetting{}
+	led := &gomsikeyboard.LEDSetting{
+		Regions: make(map[string]gomsikeyboard.SideColorIntensity),
+	}
 	var err error
 
 	if theme != "" {
