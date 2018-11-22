@@ -43,6 +43,7 @@ ExclusiveArch:  %{?go_arches:%{go_arches}}%{!?go_arches:%{ix86} x86_64 %{arm}}
 BuildRequires:  %{?go_compiler:compiler(go-compiler)}%{!?go_compiler:golang}
 BuildRequires:  libmsikeyboard-devel
 BuildRequires:  systemd
+BuildRequires:  golang-github-godbus-dbus-devel
 
 %if ! 0%{?with_bundled}
 %endif
@@ -110,8 +111,6 @@ export GOPATH=$(pwd):%{gopath}
 %else
 export GOPATH=$(pwd):$(pwd)/Godeps/_workspace:%{gopath}
 %endif
-
-go get -u github.com/godbus/dbus
 
 %if 0%{?rhel} == 7
 go build -compiler gc -ldflags "${LDFLAGS}" -o bin/%{repo} %{import_path}
