@@ -25,7 +25,7 @@
 # https://github.com/elemc/msikeyboard
 %global provider_prefix %{provider}.%{provider_tld}/%{project}/%{repo}
 %global import_path     %{provider_prefix}
-%global commit          ccaca4f2906576d9d5e5b1f1f2a4a8b2de101206
+%global commit          a62be5bb629e28f457703985b6701369cccaed0c
 %global shortcommit     %(c=%{commit}; echo ${c:0:7})
 
 #Name:           golang-%{provider}-%{project}-%{repo}
