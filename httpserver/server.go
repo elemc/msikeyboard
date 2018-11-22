@@ -38,7 +38,9 @@ func (s *Server) handlerSet(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 	}
 
-	led := &gomsikeyboard.LEDSetting{}
+	led := &gomsikeyboard.LEDSetting{
+		Regions: make(map[string]gomsikeyboard.SideColorIntensity),
+	}
 
 	mode := r.Form.Get("mode")
 	if mode == "" {
