@@ -20,8 +20,8 @@ func init() {
 		return
 	}
 	cool.Mode = "normal"
-	green := SideColorIntensity{Color: "green"}
-	yellow := SideColorIntensity{Color: "green"}
+	green := SideColorIntensity{Color: "green", Intensity: "medium"}
+	yellow := SideColorIntensity{Color: "yellow", Intensity: "high"}
 	cool.Regions["left"] = green
 	cool.Regions["middle"] = yellow
 	cool.Regions["right"] = yellow

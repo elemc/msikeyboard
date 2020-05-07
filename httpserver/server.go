@@ -36,6 +36,7 @@ func (s *Server) handlerSet(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ERROR: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
+		return
 	}
 
 	led := &gomsikeyboard.LEDSetting{

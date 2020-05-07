@@ -68,6 +68,7 @@ func main() {
 
 	led := &gomsikeyboard.LEDSetting{
 		Regions: make(map[string]gomsikeyboard.SideColorIntensity),
+		Mode:    "normal",
 	}
 	var err error
 

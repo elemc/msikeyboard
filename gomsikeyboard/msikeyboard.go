@@ -46,14 +46,14 @@ func Exit() (err error) {
 
 // Set function sets settings for keyboard
 func (led *LEDSetting) Set() (err error) {
+	if led.Mode != "" {
+		err = setMode(led.Mode)
+	}
 	for region, side := range led.Regions {
 		err = side.setColor(region)
 		if err != nil {
 			return
 		}
-	}
-	if led.Mode != "" {
-		err = setMode(led.Mode)
 	}
 
 	return
@@ -76,10 +76,10 @@ func (led *LEDSetting) Check() (err error) {
 }
 
 func (side *SideColorIntensity) setColor(region string) (err error) {
+	err = setColor(region, side.Color, side.Intensity)
 	if side.Color == "" {
 		return
 	}
-	err = setColor(region, side.Color, side.Intensity)
 	return
 }
 
